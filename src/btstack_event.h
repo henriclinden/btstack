@@ -149,6 +149,14 @@ static inline uint8_t hci_event_le_meta_get_subevent_code(const uint8_t * event)
 static inline uint8_t hci_event_hid_meta_get_subevent_code(const uint8_t * event){
     return event[2];
 }
+/***
+ * @brief Get subevent code for mesh event
+ * @param event packet
+ * @return subevent_code
+ */
+static inline uint8_t hci_event_mesh_meta_get_subevent_code(const uint8_t * event){
+    return event[2];
+}
 /**
  * @brief Get field status from event HCI_EVENT_INQUIRY_COMPLETE
  * @param event packet
@@ -5741,6 +5749,7 @@ static inline uint16_t hid_subevent_connection_closed_get_hid_cid(const uint8_t 
 static inline uint16_t hid_subevent_can_send_now_get_hid_cid(const uint8_t * event){
     return little_endian_read_16(event, 3);
 }
+
 
 
 
