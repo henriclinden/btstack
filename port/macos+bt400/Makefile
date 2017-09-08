@@ -1,0 +1,63 @@
+#
+# Build a BLE discovery application
+#
+BTSTACK_ROOT = ../..
+
+# Settings
+VPATH += ${BTSTACK_ROOT}/src
+VPATH += ${BTSTACK_ROOT}/src/ble
+VPATH += ${BTSTACK_ROOT}/src/ble/gatt-service
+VPATH += ${BTSTACK_ROOT}/src/classic
+VPATH += ${BTSTACK_ROOT}/platform/posix
+VPATH += ${BTSTACK_ROOT}/platform/libusb
+
+CFLAGS += -I.
+CFLAGS += -I${BTSTACK_ROOT}/src/ble
+CFLAGS += -I${BTSTACK_ROOT}/src/classic
+CFLAGS += -I${BTSTACK_ROOT}/src
+CFLAGS += -I${BTSTACK_ROOT}/platform/posix
+CFLAGS += -I${BTSTACK_ROOT}/platform/embedded
+
+CFLAGS  += -g -Wall -Wmissing-prototypes -Wstrict-prototypes -Wshadow -Werror -Wunused-parameter -Wredundant-decls -Wsign-compare
+
+
+# Needed files
+CORE += \
+	btstack_memory.c            \
+	btstack_linked_list.c	    \
+	btstack_memory_pool.c       \
+	btstack_run_loop.c		    \
+	btstack_util.c
+
+COMMON += \
+	ad_parser.c                 \
+	hci.c			            \
+	hci_cmd.c		            \
+	hci_dump.c		            \
+	l2cap.c			            \
+	l2cap_signaling.c
+
+GATT_CLIENT += \
+	gatt_client.c
+
+ATT	+= \
+	att_dispatch.c
+
+
+# Using Posix platform but exchange UART for libusb as transport.
+CORE += main.c btstack_stdin_posix.c
+COMMON  += hci_transport_h2_libusb.c btstack_run_loop_posix.c le_device_db_fs.c btstack_link_key_db_fs.c wav_util.c
+
+# use pkg-config for libusb
+CFLAGS  += $(shell pkg-config libusb-1.0 --cflags)
+LDFLAGS += $(shell pkg-config libusb-1.0 --libs)
+
+
+SRCS = $(CORE) $(COMMON) $(GATT_CLIENT) $(ATT)
+OBJS = $(SRCS:.c=.o)
+
+discovery: $(OBJS)
+
+clean:
+	-$(RM) -f $(OBJS)
+
