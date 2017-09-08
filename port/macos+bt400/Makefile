@@ -7,16 +7,13 @@ BTSTACK_ROOT = ../..
 VPATH += ${BTSTACK_ROOT}/src
 VPATH += ${BTSTACK_ROOT}/src/ble
 VPATH += ${BTSTACK_ROOT}/src/ble/gatt-service
-VPATH += ${BTSTACK_ROOT}/src/classic
 VPATH += ${BTSTACK_ROOT}/platform/posix
 VPATH += ${BTSTACK_ROOT}/platform/libusb
 
 CFLAGS += -I.
-CFLAGS += -I${BTSTACK_ROOT}/src/ble
-CFLAGS += -I${BTSTACK_ROOT}/src/classic
 CFLAGS += -I${BTSTACK_ROOT}/src
+CFLAGS += -I${BTSTACK_ROOT}/src/ble
 CFLAGS += -I${BTSTACK_ROOT}/platform/posix
-CFLAGS += -I${BTSTACK_ROOT}/platform/embedded
 
 CFLAGS  += -g -Wall -Wmissing-prototypes -Wstrict-prototypes -Wshadow -Werror -Wunused-parameter -Wredundant-decls -Wsign-compare
 
@@ -52,12 +49,19 @@ COMMON  += hci_transport_h2_libusb.c btstack_run_loop_posix.c le_device_db_fs.c 
 CFLAGS  += $(shell pkg-config libusb-1.0 --cflags)
 LDFLAGS += $(shell pkg-config libusb-1.0 --libs)
 
-
+# Collect all necessary object files
 SRCS = $(CORE) $(COMMON) $(GATT_CLIENT) $(ATT)
 OBJS = $(SRCS:.c=.o)
 
+all: discovery connect_cb_serialport
+
+# Build and link the simple discovery app
 discovery: $(OBJS)
 
+# Build and link the serialport endpoint app
+connect_cb_serialport: $(OBJS)
+
+# Clean up
 clean:
 	-$(RM) -f $(OBJS)
 

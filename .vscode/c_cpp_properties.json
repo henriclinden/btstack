@@ -10,6 +10,7 @@
                 "/usr/include",
                 "/usr/include/machine",
                 "${workspaceRoot}/src/*",
+                "${workspaceRoot}/port/*",
                 "${workspaceRoot}"
             ],
             "defines": [],
@@ -23,6 +24,7 @@
                     "/usr/include",
                     "/usr/include/machine",
                     "${workspaceRoot}/src/*",
+                    "${workspaceRoot}/port/*",
                     "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,

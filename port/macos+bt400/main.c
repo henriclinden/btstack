@@ -57,7 +57,7 @@
 #include "btstack_memory.h"
 #include "btstack_run_loop.h"
 #include "btstack_run_loop_posix.h"
-#include "hal_led.h"
+
 #include "hci.h"
 #include "hci_dump.h"
 #include "btstack_stdin.h"
@@ -90,13 +90,6 @@ static void sigint_handler(int param){
     log_info("Good bye, see you.\n");    
     exit(0);
 }
-
-static int led_state = 0;
-void hal_led_toggle(void){
-    led_state = 1 - led_state;
-    printf("LED State %u\n", led_state);
-}
-
 
 #define USB_MAX_PATH_LEN 7
 int main(int argc, const char * argv[]){
