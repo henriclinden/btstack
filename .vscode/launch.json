@@ -2,27 +2,15 @@
         "version": "0.2.0",
         "configurations": [
             {
-                "name": "(lldb) Launch",
+                "name": "connect_cb_serialport",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "enter program name, for example ${workspaceRoot}/a.out",
-                "args": [],
+                "program": "${workspaceRoot}/port/macos+bt400/connect_cb_serialport",
+                "args": ["00:12:F3:23:3B:6F"],
                 "stopAtEntry": false,
-                "cwd": "${workspaceRoot}",
+                "cwd": "${workspaceRoot}/port/macos+bt400",
                 "environment": [],
-                "externalConsole": true,
-                "MIMode": "lldb"
-            },
-            {
-                "name": "(lldb) Launch",
-                "type": "cppdbg",
-                "request": "launch",
-                "program": "enter program name, for example ${workspaceRoot}/a.out",
-                "args": [],
-                "stopAtEntry": false,
-                "cwd": "${workspaceRoot}",
-                "environment": [],
-                "externalConsole": true,
+                "externalConsole": false,
                 "MIMode": "lldb"
             }
         ]

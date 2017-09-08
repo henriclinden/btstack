@@ -40,6 +40,9 @@ GATT_CLIENT += \
 ATT	+= \
 	att_dispatch.c
 
+SM += \
+	sm.c
+
 
 # Using Posix platform but exchange UART for libusb as transport.
 CORE += main.c btstack_stdin_posix.c
@@ -50,7 +53,7 @@ CFLAGS  += $(shell pkg-config libusb-1.0 --cflags)
 LDFLAGS += $(shell pkg-config libusb-1.0 --libs)
 
 # Collect all necessary object files
-SRCS = $(CORE) $(COMMON) $(GATT_CLIENT) $(ATT)
+SRCS = $(CORE) $(COMMON) $(GATT_CLIENT) $(ATT) $(SM)
 OBJS = $(SRCS:.c=.o)
 
 all: discovery connect_cb_serialport
