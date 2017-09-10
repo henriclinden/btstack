@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "btstack.h"
 
@@ -25,6 +26,7 @@ static uint8_t serialport_fifo_characteristic_uuid[] = {0x24, 0x56, 0xe1, 0xb9, 
 
 static gatt_client_service_t serialport_service;
 static gatt_client_characteristic_t fifo_characteristic;
+static gatt_client_notification_t notification_registration;
 
 
 static void gatt_data_event_handler(uint8_t packet_type, uint16_t channel, uint8_t* packet, uint16_t size)
@@ -33,25 +35,31 @@ static void gatt_data_event_handler(uint8_t packet_type, uint16_t channel, uint8
     UNUSED(channel);
     UNUSED(size);
 
+    const uint8_t* data;
+    int len;
     int i;
     static int o = 0;
     
     switch (hci_event_packet_get_type(packet)) {
         case GATT_EVENT_NOTIFICATION:
-            printf("FIFO data:\n");
-            for (i = 0; i < size; i++) {
-                printf("0x%02x ", packet[i]);
+            data = gatt_event_notification_get_value(packet);
+            len = gatt_event_notification_get_value_length(packet);
+            printf("Received %2d bytes: ", len);
+            for (i = 0; i < len; i++) {
+                printf("%02x ", data[i]);
             }
-            printf(" --**--\n");
+            for (i = 0; i < len; i++) {
+                printf("%c", isprint(data[i]) ? data[i]:'.');
+            }
+            printf("\n");
             break;
         case GATT_EVENT_QUERY_COMPLETE:
-            if (!o) {
+            if (o++ < 10) {
                 gatt_client_write_value_of_characteristic(gatt_data_event_handler, connection_handle, fifo_characteristic.value_handle, 13, (uint8_t*)"Hello World\n\r");
-                o++;
             }
             break;
         default:
-            printf("got: 0x%04x\n", hci_event_packet_get_type(packet));
+            printf("Unhandled event: 0x%02x\n", hci_event_packet_get_type(packet));
             break;
     }
 }
@@ -64,12 +72,13 @@ static void gatt_characteristic_event_handler(uint8_t packet_type, uint16_t chan
 
     switch (hci_event_packet_get_type(packet)) {
         case GATT_EVENT_CHARACTERISTIC_QUERY_RESULT:
-            printf("Serialport characteristic found.\n");
+            printf("Characteristic found.\n");
             gatt_event_characteristic_query_result_get_characteristic(packet, &fifo_characteristic);
             break;
         case GATT_EVENT_QUERY_COMPLETE:
-            printf("Configure serialport FIFO characteristic for notify.\n");
-            gatt_client_write_client_characteristic_configuration(gatt_data_event_handler, connection_handle, &fifo_characteristic, 3 /*GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION*/);
+            printf("Register notification handler and configure serialport FIFO characteristic for notify.\n");
+            gatt_client_listen_for_characteristic_value_updates(&notification_registration, gatt_data_event_handler, connection_handle, &fifo_characteristic);
+            gatt_client_write_client_characteristic_configuration(gatt_data_event_handler, connection_handle, &fifo_characteristic, GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
             break;
         default:
             break;
@@ -84,7 +93,7 @@ static void gatt_service_event_handler(uint8_t packet_type, uint16_t channel, ui
 
     switch (hci_event_packet_get_type(packet)) {
         case GATT_EVENT_SERVICE_QUERY_RESULT:
-            printf("Serialport service found.\n");
+            printf("Service found.\n");
             gatt_event_service_query_result_get_service(packet, &serialport_service);
             break;
         case GATT_EVENT_QUERY_COMPLETE:
@@ -114,7 +123,7 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t* pa
                     break;
                 case HCI_STATE_WORKING:
                     // BLE stack activated. Connect to given device.
-                    printf("Connect to %s\n", bd_addr_to_str(cmdline_addr));
+                    printf("Connecting to %s\n", bd_addr_to_str(cmdline_addr));
                     gap_connect(cmdline_addr, 0);
                     break;
                 case HCI_STATE_HALTING:
@@ -148,12 +157,12 @@ int btstack_main(int argc, const char* argv[])
 {
     // This app require stdin
     if (argc != 2) {
-        printf("usage %s [00:11:22:33:44:55]\n", argv[0]);
+        printf("Usage %s [00:11:22:33:44:55]\n", argv[0]);
         exit(1);
     }
     else {
         if (sscanf_bd_addr(argv[1], cmdline_addr)) {
-            printf("connecting to: ");
+            printf("Connecting to: ");
             printf_hexdump(cmdline_addr, 6);
         }
     }
@@ -162,7 +171,7 @@ int btstack_main(int argc, const char* argv[])
     hci_event_callback_registration.callback = &hci_event_handler;
     hci_add_event_handler(&hci_event_callback_registration);
 
-    // Init L2CAP (why?)
+    // Init L2CAP
     l2cap_init();
 
     // GATT Client setup
@@ -173,6 +182,7 @@ int btstack_main(int argc, const char* argv[])
     sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
 
     // Power on = start
+    printf("Power on\n");
     hci_power_control(HCI_POWER_ON);
 
     return 0;
